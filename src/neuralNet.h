@@ -19,6 +19,7 @@ class NeuralNet
 	private :
 		ros::NodeHandle nh_;
 		ros::Subscriber input_sub;
+		ros::Subscriber desired_sub;
 		ros::Subscriber learning_sub;
 		ros::Publisher output_pub;
 		ros::Publisher weights_pub;
@@ -27,6 +28,7 @@ class NeuralNet
 
 		std::vector<float> input;
 		std::vector<float> output;
+		std::vector<float> desiredOutput;
 		std::vector<std::vector<float> > weights;
 		bool learning;
 		int learningRule;
@@ -42,6 +44,7 @@ class NeuralNet
 		void computeOutput();
 		//void activityCallback(genericNN::NeuralActivity & msg);
 		void activityCallback(genericNN::NeuralActivity msg);
+		void desiredCallback(genericNN::NeuralActivity msg);
 		//void learningCallback(std_msgs::Bool & msg);
 		void learningCallback(std_msgs::Bool msg);
 		void timerCallback(const ros::TimerEvent &);

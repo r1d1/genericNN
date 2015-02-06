@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <vector>
 #include <numeric>
+#include <getopt.h>
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
@@ -34,6 +35,8 @@ class NeuralNet
 		int learningRule;
 
 		float learningRate;
+		bool inputReceived;
+		bool desiredOutputReceived;
 
 	public :
 		NeuralNet(ros::NodeHandle & n, int insize, int outsize);

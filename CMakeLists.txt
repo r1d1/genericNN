@@ -82,10 +82,13 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp executable
 add_executable(genericNN_node src/neuralNet.cpp)
+add_executable(dataSender src/dataSender.cpp)
 
 target_link_libraries(genericNN_node ${catkin_LIBRARIES})
+target_link_libraries(dataSender ${catkin_LIBRARIES})
 
 add_dependencies(genericNN_node genericNN_gencpp)
+add_dependencies(dataSender dataSender_gencpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

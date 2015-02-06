@@ -3,10 +3,10 @@
 NeuralNet::NeuralNet(ros::NodeHandle & n, int inputSize=5, int outputSize=3)
 {
 	nh_ = n;
-	input_sub = nh_.subscribe("/inputNN", 1, &NeuralNet::activityCallback, this);
-	desired_sub = nh_.subscribe("/desiredOutputNN", 1, &NeuralNet::desiredCallback, this);
-	learning_sub = nh_.subscribe("/learningNN", 1, &NeuralNet::learningCallback, this);
-	output_pub = nh_.advertise<genericNN::NeuralActivity>("/outputNN",1);
+	input_sub = nh_.subscribe("inputNN", 1, &NeuralNet::activityCallback, this);
+	desired_sub = nh_.subscribe("desiredOutputNN", 1, &NeuralNet::desiredCallback, this);
+	learning_sub = nh_.subscribe("learningNN", 1, &NeuralNet::learningCallback, this);
+	output_pub = nh_.advertise<genericNN::NeuralActivity>("outputNN",1);
 	controlTimer = nh_.createTimer(ros::Duration(1.0), &NeuralNet::timerCallback, this);
 	learning = false;
 
@@ -47,6 +47,9 @@ void NeuralNet::computeOutput()
 		std::cout << " data : " << input.size() << " " << weights[outindex].size() << std::endl;
 		output[outindex]=float(std::inner_product(input.begin(), input.end(), weights[outindex].begin(), 0.0));
 	}
+	genericNN::NeuralActivity output_msg;
+	output_msg.activityLevels = output;
+	output_pub.publish(output_msg);
 }
 void NeuralNet::activityCallback(genericNN::NeuralActivity msg)
 {

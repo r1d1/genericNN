@@ -4,27 +4,56 @@
 DataSender::DataSender(ros::NodeHandle & n, std::string dataf)
 {
 	nh_ = n;
-	data_pub = nh_.advertise<genericNN::NeuralActivity>("/data", 1);
-//	controlTimer = nh_.createTimer(ros::Duration(1.0), &DataSender::timerCallback, this);
+	data_pub = nh_.advertise<genericNN::NeuralActivity>("data", 1);
+	controlTimer = nh_.createTimer(ros::Duration(1.0), &DataSender::timerCallback, this);
 	std::ifstream dataFile;
 	if(dataf.empty()){ std::cout << "No data model given ; generating uniform data." << std::endl; dataf = "default.txt"; }
 	std::cout << "Data file : " << dataf << std::endl;
 	dataFile.open(dataf.c_str());
 	if( !dataFile.is_open() ){ std::cerr << "File not open"<< std::endl; abort(); }
 
-	std::cout << dataFile << std::endl;
+	dataFile >> nbGenFunc >> mixtureOfFunc;
+	std::cout << "Metadata: " << nbGenFunc << " " << mixtureOfFunc << std::endl;
+	for(int function=0 ; function < nbGenFunc ; function++)
+	{
+		dimNb=1;
+		dataFile >> functionType >> dimNb;
+		std::cout << "type of function : " << functionType << " " << dimNb << std::endl;
+		std::vector<float> mus, sigmas;
+		for(int field=0 ; field < dimNb ; field++)
+		{
+			float mu=0.0, sigma=1.0;
+			dataFile >> mu >> sigma;
+			std::cout << "mean : " << mu << " variance : " << sigma << std::endl;
+		}
+		means.push_back(mus);
+		variances.push_back(sigmas);
+		std::cout << "sizes : " << means.size() << " " << variances.size() << std::endl;
+	}
 	dataFile.close();
 }
 DataSender::~DataSender(){}
 
 void DataSender::timerCallback(const ros::TimerEvent &)
 {
-	for(int i=0 ; i < output.size() ; i++)
+	genericNN::NeuralActivity dataToSend;
+	
+/*	for(int i=0 ; i < output.size() ; i++)
 	{
 		std::cout << " | " <<  output.at(i) << " "  << std::endl;
 	}
 	std::cout << std::endl;
+*/
 
+	for(int dim=0 ; dim < dimNb ; dim++)
+	{
+//		float gaussianvalue = 1.0/(sqrt(2*PI)*variances.at(dim))*exp(-0.5*pow((rand() - means.at(dim))/variances.at(dim),2));
+	//	std::cout << "val : " << gaussianvalue << " " << std::flush;
+	}
+	dataToSend.activityLevels.push_back(0.4);
+	dataToSend.activityLevels.push_back(0.2);
+	dataToSend.activityLevels.push_back(0.9);
+	data_pub.publish(dataToSend);
 }
 
 bool DataSender::run()
@@ -36,15 +65,15 @@ bool DataSender::run()
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "neuralnetwork");
+	ros::init(argc, argv, "datasender");
 	ros::NodeHandle nh;
 
 	int datasize=0, opt;
 	std::string datafile;
 	
 	const struct option availableOptions[] = {
-	{"inputsize", optional_argument, NULL, 'i'},
-	{"outputsize", optional_argument, NULL, 'o'},
+//	{"inputsize", optional_argument, NULL, 'i'},
+//	{"outputsize", optional_argument, NULL, 'o'},
 	{"datafile", optional_argument, NULL, 'f'},
 	{0,0,0,0}
 	};
@@ -55,13 +84,14 @@ int main(int argc, char** argv)
 		case 'f':
 			datafile = argv[optind];
 		break;
-		case 'i':
+	/*	case 'i':
 			datasize = atoi(argv[optind]);
 			//insize = atoi(argv[optind]);
 		break;
 		case 'o':
-//			outsize = atoi(argv[optind]);
+			outsize = atoi(argv[optind]);
 		break;
+	*/
 		default :
 			std::cout << "Unknown argument !" << std::endl;
 			exit(EXIT_FAILURE);

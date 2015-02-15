@@ -16,6 +16,8 @@
 #include <std_msgs/Bool.h>
 #include "genericNN/NeuralActivity.h"
 
+#define PI 3.14159265359
+
 class DataSender
 {
 	private :
@@ -25,6 +27,17 @@ class DataSender
 		ros::Timer controlTimer;
 
 		std::vector<float> output;
+
+		// Parameters on how to send data :
+		int nbGenFunc;
+		int dimNb;
+		std::string mixtureOfFunc;
+		// rythm of publication
+		// variable --
+		// this should be a more complex data structure array:
+		std::string functionType;
+		std::vector<std::vector<float> > means;
+		std::vector<std::vector<float> > variances;
 		
 
 	public :

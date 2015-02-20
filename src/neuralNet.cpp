@@ -7,6 +7,7 @@ NeuralNet::NeuralNet(ros::NodeHandle & n, int inputSize=5, int outputSize=3)
 	desired_sub = nh_.subscribe("desiredOutputNN", 1, &NeuralNet::desiredCallback, this);
 	learning_sub = nh_.subscribe("learningNN", 1, &NeuralNet::learningCallback, this);
 	output_pub = nh_.advertise<genericNN::NeuralActivity>("outputNN",1);
+	weights_pub = nh_.advertise<sensor_msgs::Image>("weightsNN",1);
 	controlTimer = nh_.createTimer(ros::Duration(1.0), &NeuralNet::timerCallback, this);
 	learning = false;
 	inputReceived = desiredOutputReceived = false;
@@ -17,7 +18,8 @@ NeuralNet::NeuralNet(ros::NodeHandle & n, int inputSize=5, int outputSize=3)
 	desiredOutput.assign(outputSize, 0.0);
 	weights.resize(outputSize);
 	//weights.resize(inputSize);
-	for(int i=0 ; i < outputSize ; i++){ weights[i].assign(inputSize, 1.0/(outputSize)); }
+	for(int i=0 ; i < outputSize ; i++){ weights[i].assign(inputSize, 1.0 / (outputSize)); }
+	//for(int i=0 ; i < outputSize ; i++){ weights[i].assign(inputSize, 1.0/(outputSize)); }
 	//for(int i=0 ; i < inputSize ; i++){ weights[i].assign(outputSize, 0.0); }
 	//for(int i=0 ; i < inputSize ; i++){ weights.at(i).resize(outputSize); }
 }
@@ -34,9 +36,10 @@ void NeuralNet::learn()
 			for (int i=0 ; i < input.size() ; i++)
 			{
 				weights[j].at(i) += learningRate * input.at(i) * (desiredOutput.at(j) - output.at(j));
-				std::cout << weights[j].at(i) << " " << std::flush;
+				//std::cout << weights[j].at(i) << " " << std::flush;
+				//imgWeights.data.push_back(255*weights[j].at(i));
 			}
-			std::cout << std::endl;
+			//std::cout << std::endl;
 		}
 		inputReceived = desiredOutputReceived = false;
 	}
@@ -44,13 +47,19 @@ void NeuralNet::learn()
 
 void NeuralNet::computeOutput()
 {
+	sensor_msgs::Image imgWeights;
+	imgWeights.step = imgWeights.width=input.size();
+	imgWeights.height=output.size();
+	imgWeights.encoding = "mono8";
 //	ROS_INFO("Computing network output !");
 	for(int outindex=0 ; outindex < output.size() ; outindex++ )
 	{
 		//std::transform(input.begin(), input.end(), weights.begin(), output.begin(), std::multiplies<float>());
-		std::cout << " data : " << input.size() << " " << weights[outindex].size() << std::endl;
+//		std::cout << " data : " << input.size() << " " << weights[outindex].size() << std::endl;
 		output[outindex]=float(std::inner_product(input.begin(), input.end(), weights[outindex].begin(), 0.0));
+		for (int i=0 ; i < input.size() ; i++){ imgWeights.data.push_back(255*weights[outindex].at(i)); }
 	}
+	weights_pub.publish(imgWeights);
 	genericNN::NeuralActivity output_msg;
 	output_msg.activityLevels = output;
 	output_pub.publish(output_msg);
@@ -59,7 +68,7 @@ void NeuralNet::activityCallback(genericNN::NeuralActivity msg)
 {
 	for(int neuron=0 ; neuron < input.size() ; neuron++){ input[neuron] = float(msg.activityLevels[neuron]); }
 	inputReceived = true;
-	std::cout << "input size : " << input.size() << std::endl;
+	//std::cout << "input size : " << input.size() << std::endl;
 }
 
 void NeuralNet::desiredCallback(genericNN::NeuralActivity msg)
@@ -78,7 +87,7 @@ void NeuralNet::timerCallback(const ros::TimerEvent &)
 {
 	if(input.size() > 0)
 	{
-		for(int i=0 ; i < input.size() ; i++){ std::cout << input.at(i) << " " << std::flush; }
+	//	for(int i=0 ; i < input.size() ; i++){ std::cout << input.at(i) << " " << std::flush; }
 		std::cout << std::endl;
 		computeOutput();
 		if(learning){ learn(); }
@@ -87,10 +96,7 @@ void NeuralNet::timerCallback(const ros::TimerEvent &)
 		
 		for(int i=0 ; i < output.size() ; i++)
 		{
-			/*for(int j=0 ; j < input.size() ; j++)
-			{
-				std::cout << weights[i].at(j) << " " << std::flush;
-			}*/
+			//for(int j=0 ; j < input.size() ; j++){ std::cout << weights[i].at(j) << " " << std::flush; }
 			std::cout << " | " <<  output.at(i) << " " << desiredOutput.at(i) <<std::endl;
 		}
 		std::cout << std::endl;

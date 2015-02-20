@@ -13,6 +13,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <sensor_msgs/Image.h>
 #include "genericNN/NeuralActivity.h"
 
 class NeuralNet
